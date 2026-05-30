@@ -1,3 +1,5 @@
+from typing import Sequence
+
 from typing_extensions import TypedDict
 from langgraph.graph import START, END, StateGraph
 from langchain_core.messages import SystemMessage, HumanMessage, BaseMessage, AIMessage
@@ -22,8 +24,9 @@ class State(TypedDict):
     llm1: str
     llm2: str
     best_llm: str
+    query: str
 
-def call_llm_1(state: State) -> dict[str, AIMessage]:
+def call_llm_1(state: State) -> dict:
     """Recebe o código e retorna a análise do modelo Gemini"""
 
     messages: Sequence[BaseMessage] = [
@@ -34,7 +37,7 @@ def call_llm_1(state: State) -> dict[str, AIMessage]:
     response: AIMessage = models['gemini-2.5-flash-lite'].invoke(messages)
     return {'llm1': response.content}
 
-def call_llm_2(state: State) -> dict[str, AIMessage]:
+def call_llm_2(state: State) -> dict:
     """Recebe o código e retorna a análise do modelo Gemini"""
 
     messages: Sequence[BaseMessage] = [
@@ -45,7 +48,7 @@ def call_llm_2(state: State) -> dict[str, AIMessage]:
     response: AIMessage = models['gemini-2.5-flash-lite'].invoke(messages)
     return {'llm2': response.content}
 
-def judge(state: State):
+def judge(state: State) -> dict:
     """Avalia qual análise foi mais completa e útil"""
     msg = f"""
     Aja como revisor técnico sênior e avalie a quantidade das
@@ -59,4 +62,33 @@ def judge(state: State):
     
     [Código Analisado]
     {state['query']}
+    
+    [Análise do Especialista A]
+    {state['llm1']}
+    
+    [Análise do Especialista B]
+    {state['llm2']}
+    
+    Forneça sua avaliação comparativa e conclua com seu veredito
+    final usando exatamente um destes formatos:
+    '[[A]] se a análise A for melhor'
+    '[[B]] se a análise B for melhor'
+    '[[C]] em caso de empate'
     """
+    messages: Sequence[SystemMessage] = [SystemMessage(content=msg)]
+    response: AIMessage = models['gemini-2.5-flash-lite'].invoke(messages)
+    return {"best_llm": response.content}
+
+code_analysis_builder = StateGraph(State)
+
+code_analysis_builder.add_node("call_llm_1", call_llm_1)
+code_analysis_builder.add_node("call_llm_2", call_llm_2)
+code_analysis_builder.add_node("judge", judge)
+
+code_analysis_builder.add_edge(START, "call_llm_1")
+code_analysis_builder.add_edge(START, "call_llm_2")
+code_analysis_builder.add_edge("call_llm_1", "judge")
+code_analysis_builder.add_edge("call_llm_2", "judge")
+code_analysis_builder.add_edge("judge", END)
+
+code_analysis_workflow = code_analysis_builder.compile()
