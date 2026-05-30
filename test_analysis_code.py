@@ -1,4 +1,4 @@
-from paralelization import code_analysis_workflow
+from parallelization import code_analysis_workflow
 
 codigo_teste: str = """
 def calcular_media(lista):

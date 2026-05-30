@@ -17,6 +17,12 @@ MODEL_CONFIGS: list[dict] = [
         'provider': 'google',
         'model_name': 'gemini-2.5-flash-lite',
         'temperature': 0.2,
+    },
+    {
+        'key_name': 'gemini-3.1-flash-lite',
+        'provider': 'google',
+        'model_name': 'gemini-3.1-flash-lite',
+        'temperature': 0.2,
     }
 ]
 

@@ -1,4 +1,4 @@
-from typing import Sequence
+from typing import Sequence, Optional
 
 from typing_extensions import TypedDict
 from langgraph.graph import START, END, StateGraph
@@ -21,10 +21,10 @@ Seja especifico e detalhado em suas recomendações.
 """)
 
 class State(TypedDict):
-    llm1: str
-    llm2: str
-    best_llm: str
     query: str
+    llm1: Optional[str]
+    llm2: Optional[str]
+    best_llm: Optional[str]
 
 def call_llm_1(state: State) -> dict:
     """Recebe o código e retorna a análise do modelo Gemini"""
@@ -34,7 +34,7 @@ def call_llm_1(state: State) -> dict:
         HumanMessage(content=f'Analise o seguinte código e forneça sugestões de melhorias:\n\n{state["query"]}')
     ]
 
-    response: AIMessage = models['gemini-2.5-flash-lite'].invoke(messages)
+    response: AIMessage = models['gemini-3.1-flash-lite'].invoke(messages)
     return {'llm1': response.content}
 
 def call_llm_2(state: State) -> dict:
@@ -45,7 +45,7 @@ def call_llm_2(state: State) -> dict:
         HumanMessage(content=f'Analise o seguinte código e forneça sugestões de melhorias:\n\n{state["query"]}')
     ]
 
-    response: AIMessage = models['gemini-2.5-flash-lite'].invoke(messages)
+    response: AIMessage = models['gemini-3.1-flash-lite'].invoke(messages)
     return {'llm2': response.content}
 
 def judge(state: State) -> dict:
@@ -76,7 +76,7 @@ def judge(state: State) -> dict:
     '[[C]] em caso de empate'
     """
     messages: Sequence[BaseMessage] = [HumanMessage(content=msg)]
-    response: AIMessage = models['gemini-2.5-flash-lite'].invoke(messages)
+    response: AIMessage = models['gemini-3.1-flash-lite'].invoke(messages)
     return {"best_llm": response.content}
 
 code_analysis_builder = StateGraph(State)
