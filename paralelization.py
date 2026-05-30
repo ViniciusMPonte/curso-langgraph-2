@@ -75,7 +75,7 @@ def judge(state: State) -> dict:
     '[[B]] se a análise B for melhor'
     '[[C]] em caso de empate'
     """
-    messages: Sequence[SystemMessage] = [SystemMessage(content=msg)]
+    messages: Sequence[BaseMessage] = [HumanMessage(content=msg)]
     response: AIMessage = models['gemini-2.5-flash-lite'].invoke(messages)
     return {"best_llm": response.content}
 
